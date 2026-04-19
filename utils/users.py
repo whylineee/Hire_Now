@@ -1,177 +1,58 @@
-import json
+from __future__ import annotations
+
+from formatters.cards import format_company_card, format_employee_card
+from services.marketplace import (
+    ensure_company_profile,
+    ensure_employee_profile,
+    field_label,
+    get_company,
+    get_employee,
+    update_company_field,
+    update_employee_field,
+)
 
 
 def add_new_employee(data):
-    userDataItem = {
-        "id": data.id,
-        "full_name": data.full_name,
-        "username": data.username,
-        "is_bot": data.is_bot,
-        "language_code": data.language_code,
-        "status": "new",
-        "role": "employee",
-        "profile_img": None,
-        "description": None,
-        "skills": None,
-        "locations": None,
-        "experience": None,
-    }
-
-    # Read from file
-    with open("data/employee.json", "r") as file:
-        emp = json.load(file)
-
-    # Check if user already exists
-    for user in emp:
-        if user["id"] == data.id:
-            return
-
-    # Add new user
-    emp.append(userDataItem)
-
-    # Write to file
-    with open("data/employee.json", "w") as f:
-        json.dump(emp, f, indent=4)
+    return ensure_employee_profile(data)
 
 
 def add_new_company(data):
-    userDataItem = {
-        "id": data.id,
-        "company_name": None,
-        "username": data.username,
-        "is_bot": data.is_bot,
-        "language_code": data.language_code,
-        "status": "new",
-        "role": "company",
-        "description": None,
-        "locations": None,
-        "search": None,
-        "salary": None
-    }
-
-    # Read from file
-    with open("data/company.json", "r") as file:
-        emp = json.load(file)
-
-    # Check if user already exists
-    for user in emp:
-        if user["id"] == data.id:
-            return
-
-    # Add new user
-    emp.append(userDataItem)
-
-    # Write to file
-    with open("data/company.json", "w") as f:
-        json.dump(emp, f, indent=4)
+    return ensure_company_profile(data)
 
 
 def edit_field_company(msg, field, value):
-    data = msg.from_user
-    msg_text = ""
-    with open("data/company.json", "r") as file:
-        emp = json.load(file)
+    company = update_company_field(msg.from_user.id, field, value["new_value"])
+    if not company:
+        return "Спочатку оберіть роль роботодавця та створіть вакансію."
 
-    for user in emp:
-        if user["id"] == data.id:
-            user[field] = value["new_value"]
-
-            # msg answer
-            msg_text = (f"Your {field} was successfully updated! \n"
-                        f"\n\n{field.capitalize()}: {value['new_value']}\n"
-                        f"Company_name: {user['company_name']}\n"
-                        f"username: {data.username}\n"
-                        f"language code: {data.language_code}\n"
-                        f"Status: {user['status']}\n"
-                        f"Role: {user['role']}\n"
-                        f"description: {user['description']}\n"
-                        f"locations: {user['locations']}\n"
-                        f"Search: {user['search']}\n"
-                        f"Salary: {user['salary']}\n")
-
-    with open("data/company.json", "w") as f:
-        json.dump(emp, f, indent=4)
-
-    return msg_text
+    return (
+        f"✅ Поле «{field_label(field)}» оновлено.\n\n"
+        f"{format_company_card(company)}"
+    )
 
 
 def edit_field_employee(msg, field, value):
-    data = msg.from_user
-    msg_text = ""
-    with open("data/employee.json", "r") as file:
-        emp = json.load(file)
+    employee = update_employee_field(msg.from_user.id, field, value["new_value"])
+    if not employee:
+        return "Спочатку оберіть роль працівника та створіть анкету."
 
-    for user in emp:
-        if user["id"] == data.id:
-            user[field] = value["new_value"]
-
-            # msg answer
-            msg_text = (f"Your {field} was successfully updated! \n"
-                        f"\n\n{field.capitalize()}: {value['new_value']}\n"
-                        f"Name: {data.full_name}\n"
-                        f"Username: {data.username}\n"
-                        f"Language code: {data.language_code}\n"
-                        f"Status: {user['status']}\n"
-                        f"Role: {user['role']}\n"
-                        f"Profile image: {user['profile_img']}\n"
-                        f"Description: {user['description']}\n"
-                        f"locations: {user['locations']}\n"
-                        f"Experience: {user['experience']}\n")
-
-    with open("data/employee.json", "w") as f:
-        json.dump(emp, f, indent=4)
-
-    return msg_text
+    return (
+        f"✅ Поле «{field_label(field)}» оновлено.\n\n"
+        f"{format_employee_card(employee)}"
+    )
 
 
 def get_employee_text(employee):
-    txt = (
-        f"👤 Name: {employee['full_name']}\n"
-        f"🔖 Username: {employee['username']}\n"
-    )
-
-    if employee['skills']:
-        txt += f"🛠️ Skills: {employee['skills']}\n"
-    else:
-        txt += "🛠️ Skills: Not specified\n"
-
-    if employee['experience']:
-        txt += f"💼 Experience: {employee['experience']}\n"
-    else:
-        txt += "💼 Experience: Not specified\n\n"
-
-    if employee['description']:
-        txt += f"📝 Description: {employee['description']}\n"
-    else:
-        txt += "📝 Description: Not specified\n"
-
-    if employee['locations']:
-        txt += f"📍 Locations: {employee['locations']}\n"
-    else:
-        txt += "📍 Locations: Not specified\n"
-
-
-    if employee['status']:
-        txt += f"📌 Status: {employee['status']}\n"
-    else:
-        txt += "📌 Status: Not specified\n"
-
-    return txt
+    return format_employee_card(employee)
 
 
 def get_company_text(company):
-    txt = f"🔖 Username: {company.get('username', 'Not specified')}\n"
+    return format_company_card(company)
 
-    txt += f"🏢 Company Name: {company.get('company_name', 'Not specified')}\n"
 
-    txt += f"📝 Description: {company.get('description', 'Not specified')}\n"
+def get_employee_profile(user_id: int):
+    return get_employee(user_id)
 
-    txt += f"📍 Locations: {company.get('locations', 'Not specified') or 'Not specified'}\n"
 
-    txt += f"📌 Status: {company.get('status', 'Not specified')}\n"
-
-    txt += f"🔎 Search Tag: {company.get('search', 'Not specified')}\n"
-
-    txt += f"💲 Salary : {company.get('salary', 'Not specified')}\n"
-
-    return txt
+def get_company_profile(user_id: int):
+    return get_company(user_id)

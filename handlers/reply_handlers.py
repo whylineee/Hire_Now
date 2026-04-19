@@ -1,264 +1,198 @@
-import json
-import os
-
-from aiogram import types, Router
-from aiogram.types import FSInputFile
-
-from keyboards.inline_keyboards import get_inline_hs
-from keyboards.reply_keyboards import get_quiz_keyboard, get_main_keyboard, get_searchion_keyboard, \
-    get_workstation_keyboard, get_workstation_menu_keyboard
+from aiogram import Router, types
 from aiogram.fsm.context import FSMContext
 
+from formatters.cards import (
+    format_company_profile_overview,
+    format_employee_profile_overview,
+)
+from keyboards.inline_keyboards import get_inline_hs
+from keyboards.reply_keyboards import (
+    get_main_keyboard,
+    get_quiz_keyboard,
+    get_searchion_keyboard,
+    get_workstation_keyboard,
+    get_workstation_menu_keyboard,
+)
+from services.marketplace import (
+    delete_company,
+    delete_employee,
+    get_company,
+    get_employee,
+)
 from states.change_skills_py import ChangeSkills
-from states.company_states.who_search_py import WhoSearch
-from states.edit_user_states import EditDescUser
-from states.search_states import SearchEmployee
-from states.enter_location import EnterLocations
-from states.describe_experience import DescribeExperience
-from states.company_states.name_company import NameCompany
-from states.company_states.describe_vacancy import DesVacancy
-from states.company_states.search_company import SearchCompany
 from states.company_states.company_locations import LocationsCompany
+from states.company_states.describe_vacancy import DesVacancy
+from states.company_states.name_company import NameCompany
 from states.company_states.salary_comp import SalaryComp
+from states.company_states.search_company import SearchCompany
+from states.company_states.who_search_py import WhoSearch
+from states.describe_experience import DescribeExperience
+from states.edit_user_states import EditDescUser
+from states.enter_location import EnterLocations
+from states.search_states import SearchEmployee
 from states.upload_media_states import UploadMediaStates
-from states.delete_ancets import DelEmployee
-
-from utils.users import get_employee_text, get_company_text
 
 router = Router()
 
 
-@router.message(lambda message: message.text == "🎮Головне меню")
-async def test_handler(message: types.Message):
-    await message.answer("""Головне меню""", reply_markup=get_searchion_keyboard())
+EMPLOYEE_MENU_TEXTS = {"📄 Моя анкета", "Моя анкета"}
+EMPLOYEE_EDIT_MENU_TEXTS = {"🛠 Редагувати анкету", "📡Анкета📡"}
+COMPANY_MENU_TEXTS = {"🕐 Моя вакансія", "🕐Моя вакансія🕐"}
+ROLE_MENU_TEXTS = {"🏢 Мій кабінет", "🏢Мій кабінет🏢", "🔄 Змінити роль", "🔹️️️️️️Перемкнути роль"}
+ABOUT_TEXTS = {"ℹ️ Про бота", "Про нас", "✏️Про нас✏️", "🤖Про нову версію бота🤖"}
+SUPPORT_TEXTS = {"💬 Підтримка", "Підтримка 24/7", "Підтримка 24/7📲"}
 
 
-@router.message(lambda message: message.text == "Моя анкета")
-async def test_handler(message: types.Message):
-    await message.answer("""1. Моя анкета""", reply_markup=get_searchion_keyboard())
+@router.message(lambda message: message.text in {"🎮Головне меню", "Головне меню", "◀️ Назад до меню"})
+async def show_employee_main_menu(message: types.Message):
+    await message.answer("Головне меню працівника", reply_markup=get_main_keyboard())
 
 
-@router.message(lambda message: message.text == "🕐Моя вакансія🕐")
-async def test_handler(message: types.Message):
-    await message.answer("""Ваша вакансія""", reply_markup=get_workstation_menu_keyboard())
+@router.message(lambda message: message.text in {"Головне меню 💻", "◀️ Назад до меню роботодавця"})
+async def show_company_main_menu(message: types.Message):
+    await message.answer("Головне меню роботодавця", reply_markup=get_workstation_keyboard())
 
 
-@router.message(lambda message: message.text == "Про нас")
-async def questionnaire_handler(message: types.Message):
-    await message.answer("""Цей бот створив : whylineee
-    ПІБ: Савин Марко Андрійович""", reply_markup=get_main_keyboard())
+@router.message(lambda message: message.text in ROLE_MENU_TEXTS)
+async def show_role_selector(message: types.Message):
+    await message.answer(
+        "Виберіть роль. Для кожної ролі бот збереже окрему анкету.",
+        reply_markup=get_inline_hs(),
+    )
 
 
-@router.message(lambda message: message.text == "📡Анкета📡")
-async def questionnaire_handler(message: types.Message):
-    await message.answer("""Ваша анкета""", reply_markup=get_quiz_keyboard())
+@router.message(lambda message: message.text in ABOUT_TEXTS)
+async def show_about(message: types.Message):
+    await message.answer(
+        "HireNow допомагає кандидатам знаходити релевантні вакансії, а роботодавцям — відповідних людей по навичках і локації.",
+        reply_markup=get_searchion_keyboard(),
+    )
 
 
-@router.message(lambda message: message.text == "Головне меню")
-async def questionnaire_handler(message: types.Message):
-    await message.answer("""Головне меню""", reply_markup=get_main_keyboard())
+@router.message(lambda message: message.text in SUPPORT_TEXTS)
+async def show_support(message: types.Message):
+    await message.answer(
+        "Напишіть у підтримку: @whylineee\n\nЯкщо щось не працює, додайте роль, сценарій і короткий опис проблеми.",
+        reply_markup=get_searchion_keyboard(),
+    )
 
 
-@router.message(lambda message: message.text == "Головне меню 💻")
-async def questionnaire_handler(message: types.Message):
-    await message.answer("""Головне меню""", reply_markup=get_workstation_keyboard())
+@router.message(lambda message: message.text in EMPLOYEE_MENU_TEXTS)
+async def show_employee_profile(message: types.Message):
+    employee = get_employee(message.from_user.id)
+    await message.answer(
+        format_employee_profile_overview(employee),
+        reply_markup=get_quiz_keyboard(),
+    )
 
 
-@router.message(lambda message: message.text == "✏️Про нас✏️")
-async def questionnaire_handler(message: types.Message):
-    await message.answer("""Цей бот створив : whylineee
-    ПІБ: Савин Марко Андрійович""", reply_markup=get_searchion_keyboard())
+@router.message(lambda message: message.text in EMPLOYEE_EDIT_MENU_TEXTS)
+async def show_employee_edit_menu(message: types.Message):
+    employee = get_employee(message.from_user.id)
+    await message.answer(
+        format_employee_profile_overview(employee),
+        reply_markup=get_quiz_keyboard(),
+    )
 
 
-@router.message(lambda message: message.text == "Підтримка 24/7")
-async def questionnaire_handler(message: types.Message):
-    await message.answer("""Привіт, це цілодобова підтримка нашого телеграм-боту,
-напиши сюди (jpg_junior) і тобі дадуть відповідь.
-Дякую за те що користуєшся нашим ботом.""", reply_markup=get_main_keyboard())
+@router.message(lambda message: message.text in COMPANY_MENU_TEXTS)
+async def show_company_profile(message: types.Message):
+    company = get_company(message.from_user.id)
+    await message.answer(
+        format_company_profile_overview(company),
+        reply_markup=get_workstation_menu_keyboard(),
+    )
 
 
-@router.message(lambda message: message.text == "Підтримка 24/7📲")
-async def questionnaire_handler(message: types.Message):
-    await message.answer("""Привіт, це цілодобова підтримка нашого телеграм-боту,
-напиши сюди (whylineee) і тобі дадуть відповідь.
-Дякую за те що користуєшся нашим ботом.""", reply_markup=get_searchion_keyboard())
-
-
-@router.message(lambda message: message.text == "📊Поміняти текст📊")
-async def questionnaire_handler(message: types.Message, state: FSMContext):
-    await message.answer("""Введіть новий текст""")
-    await state.set_state(EditDescUser.edit_e_desc)
-
-
-@router.message(lambda message: message.text == "👷‍♂️Шукати робітників👷‍♂️")
-async def questionnaire_handler(message: types.Message, state: FSMContext):
-    await state.set_state(SearchEmployee.query)
-    await message.answer("""Ось доступні анкети:""")
-    with open("data/employee.json", "r") as f:
-        employee = json.load(f)
-    for employee in employee:
-        text = get_employee_text(employee)
-        if employee["profile_img"] is not None:
-            photo_file = FSInputFile(employee["profile_img"])
-            await message.answer_photo(photo=photo_file, caption=text, reply_markup=get_workstation_keyboard())
-        else:
-            await message.answer(text, reply_markup=get_workstation_keyboard())
-
-
-@router.message(lambda message: message.text == "🤖Про нову версію бота🤖")
-async def questionnaire_handler(message: types.Message):
-    await message.answer("""Привіт, це найновіша версія бота!""", reply_markup=get_searchion_keyboard())
-
-
-@router.message(lambda message: message.text == "🤖Про нову версію бота🤖")
-async def questionnaire_handler(message: types.Message):
-    await message.answer("""Привіт, це найновіша версія бота!""", reply_markup=get_searchion_keyboard())
-
-
-@router.message(lambda message: message.text == "😎Запроси друзів – отримай більше лайків 😎")
-async def questionnaire_handler(message: types.Message):
-    await message.answer("""Запроси друга, отримай лайки.  Круто!""", reply_markup=get_searchion_keyboard())
-
-
-@router.message(lambda message: message.text == "🆙Вибрати Технології/Навички🆙")
-async def questionnaire_handler(message: types.Message, state: FSMContext):
-    await message.answer("""Впишіть ваші технології:""", )
-    await state.set_state(ChangeSkills.change_e_skills)
-
-
-@router.message(lambda message: message.text == "💻Описати свій досвід роботи в IT💻")
-async def questionnaire_handler(message: types.Message, state: FSMContext):
-    await message.answer("""Опишіть ваш досвід:""", )
-    await state.set_state(DescribeExperience.describe_e_experience)
-
-
-@router.message(lambda message: message.text == "📍Ввести локацію роботи📍")
-async def questionnaire_handler(message: types.Message, state: FSMContext):
-    await message.answer("""Введіть локацію:""", )
-    await state.set_state(EnterLocations.enter_e_locations)
-
-
-@router.message(lambda message: message.text == "🏢Мій кабінет🏢" or message.text == "🔹️️️️️️Перемкнути роль")
-async def cabinet_handler(message: types.Message):
-    await message.answer("""Вибери хто ти, Роботодавець чи працівник?""", reply_markup=get_inline_hs())
-
-
-@router.message(lambda message: message.text == "🗄Назва Компанії🗄")
-async def questionnaire_handler(message: types.Message, state: FSMContext):
-    await message.answer("""Введіть назву компанії:""", )
-    await state.set_state(NameCompany.name_c_company)
-
-
-@router.message(lambda message: message.text == "📥Опис вакансії📥")
-async def questionnaire_handler(message: types.Message, state: FSMContext):
-    await message.answer("""Введіть опис вакансії:""", )
-    await state.set_state(DesVacancy.des_c_vacancy)
-
-
-@router.message(lambda message: message.text == "🔎Кого ви шукаєте🔍")
-async def questionnaire_handler(message: types.Message, state: FSMContext):
-    await message.answer("""Кого ви шукаєте:""", )
-    await state.set_state(WhoSearch.who_c_search)
-
-
-@router.message(lambda message: message.text == "🔎Шукати вакансії👁")
-async def questionnaire_handler(message: types.Message, state: FSMContext):
+@router.message(lambda message: message.text == "🔎 Шукати вакансії" or message.text == "🔎Шукати вакансії👁")
+async def request_company_search(message: types.Message, state: FSMContext):
     await state.set_state(SearchCompany.company)
-    await message.answer("""Ось доступні вакансії:""")
-    with open("data/company.json", "r") as f:
-        company = json.load(f)
-    for company in company:
-        text = get_company_text(company)
-        await message.answer(text, reply_markup=get_main_keyboard())
+    await message.answer(
+        "Введіть, що ви шукаєте. Наприклад: `python remote`.\n"
+        "Щоб показати все доступне, напишіть `усі`.",
+        reply_markup=get_main_keyboard(),
+    )
 
 
-@router.message(lambda message: message.text == "📍Локація компанії🚉")
-async def questionnaire_handler(message: types.Message, state: FSMContext):
-    await message.answer("""Введіть локацію компанії:""", )
-    await state.set_state(LocationsCompany.loc_c_company)
+@router.message(lambda message: message.text == "👀 Шукати кандидатів" or message.text == "👷‍♂️Шукати робітників👷‍♂️")
+async def request_employee_search(message: types.Message, state: FSMContext):
+    await state.set_state(SearchEmployee.query)
+    await message.answer(
+        "Введіть стек або роль, яку шукаєте. Наприклад: `frontend react kyiv`.\n"
+        "Щоб показати всіх, напишіть `усі`.",
+        reply_markup=get_workstation_keyboard(),
+    )
 
 
-@router.message(lambda message: message.text == "💲Зарплатний діпазон💲")
-async def questionnaire_handler(message: types.Message, state: FSMContext):
-    await message.answer("""Введіть зарплатний діапазон:""", )
-    await state.set_state(SalaryComp.salary_comp)
+@router.message(lambda message: message.text == "📝 Опис" or message.text == "📊Поміняти текст📊")
+async def request_employee_description(message: types.Message, state: FSMContext):
+    await state.set_state(EditDescUser.edit_e_desc)
+    await message.answer("Напишіть короткий опис про себе.")
 
 
-@router.message(lambda message: message.text == "📸Поміняти фото📸")
-async def media_handler(message: types.Message, state: FSMContext):
+@router.message(lambda message: message.text == "🛠 Навички" or message.text == "🆙Вибрати Технології/Навички🆙")
+async def request_employee_skills(message: types.Message, state: FSMContext):
+    await state.set_state(ChangeSkills.change_e_skills)
+    await message.answer("Введіть навички через кому. Наприклад: Python, Django, PostgreSQL")
+
+
+@router.message(lambda message: message.text == "💼 Досвід" or message.text == "💻Описати свій досвід роботи в IT💻")
+async def request_employee_experience(message: types.Message, state: FSMContext):
+    await state.set_state(DescribeExperience.describe_e_experience)
+    await message.answer("Опишіть ваш досвід або рівень: Junior / Middle / Senior.")
+
+
+@router.message(lambda message: message.text == "📍 Локація" or message.text == "📍Ввести локацію роботи📍")
+async def request_employee_location(message: types.Message, state: FSMContext):
+    await state.set_state(EnterLocations.enter_e_locations)
+    await message.answer("Вкажіть місто або формат роботи: Kyiv / Remote / Hybrid.")
+
+
+@router.message(lambda message: message.text == "📸 Оновити фото" or message.text == "📸Поміняти фото📸")
+async def request_employee_photo(message: types.Message, state: FSMContext):
     await state.set_state(UploadMediaStates.wait_for_photo)
-    await message.answer("Please sent photo:")
+    await message.answer("Надішліть фото профілю одним повідомленням.")
 
 
-@router.message(lambda message: message.text == "❌Видалити анкету❌")
-async def del_employee(message: types.Message, state: FSMContext):
-    file_path = "data/employee.json"
-
-    if not os.path.exists(file_path):
-        await message.answer("⚠️ Файл employee.json не знайдено.")
-        return
-
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            employees = json.load(f)
-    except Exception as e:
-        await message.answer(f"⚠️ Помилка при зчитуванні файлу: {e}")
-        return
-
-    user_id = str(message.from_user.id)
-    found = False
-
-    updated_employees = []
-    for emp in employees:
-        emp_id = str(emp.get("id"))  # <-- Змінив тут
-        if emp_id != user_id:
-            updated_employees.append(emp)
-        else:
-            found = True
-
-    if found:
-        with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(updated_employees, f, ensure_ascii=False, indent=4)
-
-        await message.answer("✅ Вашу анкету видалено.")
-    else:
-        await message.answer("⚠️ Анкети з вашим ID не знайдено.")
+@router.message(lambda message: message.text == "🗄 Назва компанії" or message.text == "🗄Назва Компанії🗄")
+async def request_company_name(message: types.Message, state: FSMContext):
+    await state.set_state(NameCompany.name_c_company)
+    await message.answer("Введіть назву компанії.")
 
 
+@router.message(lambda message: message.text == "📥 Опис вакансії" or message.text == "📥Опис вакансії📥")
+async def request_company_description(message: types.Message, state: FSMContext):
+    await state.set_state(DesVacancy.des_c_vacancy)
+    await message.answer("Опишіть вакансію: стек, задачі, формат роботи.")
 
 
+@router.message(lambda message: message.text == "🔎 Кого шукаєте" or message.text == "🔎Кого ви шукаєте🔍")
+async def request_company_search_role(message: types.Message, state: FSMContext):
+    await state.set_state(WhoSearch.who_c_search)
+    await message.answer("Кого шукаєте? Наприклад: Python backend developer.")
 
 
-@router.message(lambda message: message.text == "🗑Видалити анкету🗑")
-async def del_company(message: types.Message, state: FSMContext):
-    file_path = "data/company.json"  # Заміна шляху до файлу
+@router.message(lambda message: message.text == "📍 Локація компанії" or message.text == "📍Локація компанії🚉")
+async def request_company_location(message: types.Message, state: FSMContext):
+    await state.set_state(LocationsCompany.loc_c_company)
+    await message.answer("Вкажіть локацію вакансії: Kyiv / Remote / Hybrid.")
 
-    if not os.path.exists(file_path):
-        await message.answer("⚠️ Файл company.json не знайдено.")
-        return
 
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            companies = json.load(f)
-    except Exception as e:
-        await message.answer(f"⚠️ Помилка при зчитуванні файлу: {e}")
-        return
+@router.message(lambda message: message.text == "💲 Зарплатний діапазон" or message.text == "💲Зарплатний діпазон💲")
+async def request_company_salary(message: types.Message, state: FSMContext):
+    await state.set_state(SalaryComp.salary_comp)
+    await message.answer("Вкажіть зарплатний діапазон. Наприклад: 2500-3500 USD")
 
-    user_id = str(message.from_user.id)
-    found = False
 
-    updated_companies = []
-    for comp in companies:
-        comp_id = str(comp.get("id"))  # <-- Тут нічого не змінюється
-        if comp_id != user_id:
-            updated_companies.append(comp)
-        else:
-            found = True
+@router.message(lambda message: message.text == "❌ Видалити анкету" or message.text == "❌Видалити анкету❌")
+async def remove_employee_profile(message: types.Message):
+    deleted = delete_employee(message.from_user.id)
+    text = "✅ Анкету працівника видалено." if deleted else "⚠️ Анкету працівника не знайдено."
+    await message.answer(text, reply_markup=get_main_keyboard())
 
-    if found:
-        with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(updated_companies, f, ensure_ascii=False, indent=4)
 
-        await message.answer("✅ Вашу анкету компанії видалено.")
-    else:
-        await message.answer("⚠️ Анкети компанії з вашим ID не знайдено.")
+@router.message(lambda message: message.text == "🗑 Видалити вакансію" or message.text == "🗑Видалити анкету🗑")
+async def remove_company_profile(message: types.Message):
+    deleted = delete_company(message.from_user.id)
+    text = "✅ Вакансію видалено." if deleted else "⚠️ Вакансію не знайдено."
+    await message.answer(text, reply_markup=get_workstation_keyboard())

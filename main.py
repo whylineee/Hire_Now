@@ -9,15 +9,11 @@ from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 
-# keyboards
-from keyboards.reply_keyboards import get_main_keyboard, get_searchion_keyboard
+from keyboards.reply_keyboards import get_searchion_keyboard
 from keyboards.inline_keyboards import get_inline_hs
 from handlers import register_handlers
-from utils.users import add_new_employee
-from utils.users import add_new_company
 
 
-# Bot token can be obtained via https://t.me/BotFather
 TOKEN = getenv("BOT_TOKEN")
 dp = Dispatcher()
 register_handlers(dp)
@@ -33,6 +29,9 @@ async def command_start_handler(message: Message) -> None:
 
 
 async def main() -> None:
+    if not TOKEN:
+        raise RuntimeError("BOT_TOKEN is not set")
+
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     await dp.start_polling(bot)
 

@@ -1,65 +1,59 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
 
 def get_main_keyboard() -> ReplyKeyboardMarkup:
-    keyboard = ReplyKeyboardMarkup(
+    return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="🔎Шукати вакансії👁"), KeyboardButton(text="📡Анкета📡")],
-            [KeyboardButton(text="🔹️️️️️️Перемкнути роль")],
-            [KeyboardButton(text="🎮Головне меню")],
+            [KeyboardButton(text="🔎 Шукати вакансії"), KeyboardButton(text="📄 Моя анкета")],
+            [KeyboardButton(text="🛠 Редагувати анкету"), KeyboardButton(text="🔄 Змінити роль")],
+            [KeyboardButton(text="ℹ️ Про бота"), KeyboardButton(text="💬 Підтримка")],
         ],
-        resize_keyboard=True
+        resize_keyboard=True,
     )
-    return keyboard
 
 
 def get_quiz_keyboard() -> ReplyKeyboardMarkup:
-    keyboard = ReplyKeyboardMarkup(
+    return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="📸Поміняти фото📸")],
-            [KeyboardButton(text="📊Поміняти текст📊"), KeyboardButton(text="🆙Вибрати Технології/Навички🆙")],
-            [KeyboardButton(text="📍Ввести локацію роботи📍"), KeyboardButton(text="💻Описати свій досвід роботи в IT💻")],
-            [KeyboardButton(text="❌Видалити анкету❌")],
-            [KeyboardButton(text="Головне меню")],
+            [KeyboardButton(text="📄 Моя анкета")],
+            [KeyboardButton(text="📸 Оновити фото")],
+            [KeyboardButton(text="📝 Опис"), KeyboardButton(text="🛠 Навички")],
+            [KeyboardButton(text="📍 Локація"), KeyboardButton(text="💼 Досвід")],
+            [KeyboardButton(text="❌ Видалити анкету")],
+            [KeyboardButton(text="◀️ Назад до меню")],
         ],
-        resize_keyboard=True
+        resize_keyboard=True,
     )
-    return keyboard
+
 
 def get_searchion_keyboard() -> ReplyKeyboardMarkup:
-    keyboard = ReplyKeyboardMarkup(
+    return ReplyKeyboardMarkup(
         keyboard=[
-
-            [KeyboardButton(text="😎Запроси друзів – отримай більше лайків 😎"),],
-            [KeyboardButton(text="🤖Про нову версію бота🤖")],
-            [KeyboardButton(text="Підтримка 24/7📲"), KeyboardButton(text="✏️Про нас✏️") ],
-            [KeyboardButton(text="🏢Мій кабінет🏢")]
+            [KeyboardButton(text="🏢 Мій кабінет")],
+            [KeyboardButton(text="ℹ️ Про бота"), KeyboardButton(text="💬 Підтримка")],
         ],
-        resize_keyboard=True
+        resize_keyboard=True,
     )
-    return keyboard
+
 
 def get_workstation_keyboard() -> ReplyKeyboardMarkup:
-    keyboard = ReplyKeyboardMarkup(
+    return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="🕐Моя вакансія🕐"), KeyboardButton(text="👷‍♂️Шукати робітників👷‍♂️")],
-            [KeyboardButton(text="🔹️️️️️️Перемкнути роль")],
-            [KeyboardButton(text="🎮Головне меню")],
+            [KeyboardButton(text="👀 Шукати кандидатів"), KeyboardButton(text="🕐 Моя вакансія")],
+            [KeyboardButton(text="🛠 Редагувати вакансію"), KeyboardButton(text="🔄 Змінити роль")],
+            [KeyboardButton(text="ℹ️ Про бота"), KeyboardButton(text="💬 Підтримка")],
         ],
-        resize_keyboard=True
+        resize_keyboard=True,
     )
-    return keyboard
+
 
 def get_workstation_menu_keyboard() -> ReplyKeyboardMarkup:
-    keyboard = ReplyKeyboardMarkup(
+    return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="🗄Назва Компанії🗄"), KeyboardButton(text="📥Опис вакансії📥"),],
-            [KeyboardButton(text="🔎Кого ви шукаєте🔍"), KeyboardButton(text="💲Зарплатний діпазон💲")],
-            [KeyboardButton(text="🗑Видалити анкету🗑") ,KeyboardButton(text="📍Локація компанії🚉")],
-            [KeyboardButton(text="Головне меню 💻")]
-
-
+            [KeyboardButton(text="🗄 Назва компанії"), KeyboardButton(text="📥 Опис вакансії")],
+            [KeyboardButton(text="🔎 Кого шукаєте"), KeyboardButton(text="💲 Зарплатний діапазон")],
+            [KeyboardButton(text="📍 Локація компанії"), KeyboardButton(text="🗑 Видалити вакансію")],
+            [KeyboardButton(text="◀️ Назад до меню роботодавця")],
         ],
-        resize_keyboard=True
+        resize_keyboard=True,
     )
-    return keyboard
