@@ -2,17 +2,22 @@ import asyncio
 import logging
 import sys
 from os import getenv
+from pathlib import Path
 
 from aiogram import Bot, Dispatcher, html
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.types import Message
+from dotenv import load_dotenv
 
 from keyboards.reply_keyboards import get_searchion_keyboard
 from keyboards.inline_keyboards import get_inline_hs
 from handlers import register_handlers
 
+
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
 
 TOKEN = getenv("BOT_TOKEN")
 dp = Dispatcher()

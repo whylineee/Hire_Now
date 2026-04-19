@@ -1,0 +1,22 @@
+[project]
+name = "hire-now-bot"
+version = "0.1.0"
+description = "Telegram bot for matching IT candidates and employers."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aiogram>=3.27.0,<4.0.0",
+    "python-dotenv>=1.1.0,<2.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["main"]
+
+[tool.setuptools.packages.find]
+include = ["formatters*", "handlers*", "keyboards*", "services*", "states*", "utils*"]
+exclude = ["data*", "media*"]
+namespaces = true
